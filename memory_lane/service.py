@@ -377,6 +377,38 @@ def memories_in_era(db: Session, patient_id: str, era: str) -> List[Memory]:
     return [m for m in list_memories(db, patient_id) if _era_key(m) == era]
 
 
+# ---- Media ------------------------------------------------------
+
+
+def attach_media_to_memory(
+    db: Session,
+    memory_id: str,
+    original_filename: str,
+    data: bytes,
+) -> tuple[Memory, str, str]:
+    """Save a photo or audio file and link it to the given memory.
+
+    Returns (memory, kind, relative_path). Raises ValueError if the
+    memory doesn't exist, or UnsupportedMediaType if the file extension
+    isn't one of the approved lists.
+    """
+    from . import media as media_module
+
+    memory = db.get(Memory, memory_id)
+    if memory is None:
+        raise ValueError(f"Memory not found: {memory_id}")
+
+    kind, relative = media_module.save_media_bytes(
+        memory.patient_id,
+        original_filename,
+        data,
+    )
+    media_module.attach_media(memory, kind, relative)
+    db.commit()
+    db.refresh(memory)
+    return memory, kind, relative
+
+
 # ---- Visit reports ----------------------------------------------
 
 

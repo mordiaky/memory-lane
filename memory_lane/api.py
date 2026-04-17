@@ -8,11 +8,11 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.responses import PlainTextResponse
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 
-from . import exporters, service
+from . import exporters, media, service
 from .lmd_bridge import AnchorSuggestion, VisitSuggestion
 from .models import MemoryStatus
 from .schemas import (
@@ -282,3 +282,62 @@ def export_csv(patient_id: str, db: Session = Depends(get_db)) -> str:
         return exporters.export_memories_csv_string(db, patient_id)
     except ValueError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+
+@app.post(
+    "/memories/{memory_id}/media",
+    response_model=MemoryRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def upload_media(
+    memory_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+) -> MemoryRead:
+    """Attach a photo or audio clip to a memory."""
+    filename = file.filename or "upload"
+    data = file.file.read()
+    try:
+        memory, _kind, _rel = service.attach_media_to_memory(
+            db,
+            memory_id,
+            filename,
+            data,
+        )
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+    except media.UnsupportedMediaType as exc:
+        raise HTTPException(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, str(exc)
+        ) from exc
+    return MemoryRead.model_validate(memory)
+
+
+@app.get("/memories/{memory_id}/media")
+def serve_media(memory_id: str, db: Session = Depends(get_db)) -> FileResponse:
+    """Serve the photo attached to a memory (if any).
+
+    Prefers the photo. If the memory has only an audio attachment,
+    returns that instead.
+    """
+    from .models import Memory
+
+    memory = db.get(Memory, memory_id)
+    if memory is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Memory not found")
+
+    relative = memory.photo_path or memory.audio_path
+    if relative is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No media attached")
+
+    try:
+        path = media.resolve_media_path(relative)
+    except FileNotFoundError:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            "Media file missing on disk",
+        ) from None
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+
+    return FileResponse(path)

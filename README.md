@@ -79,6 +79,9 @@ memory-lane visit-plan <PATIENT_ID>
 # See which memories are at risk
 memory-lane fading <PATIENT_ID>
 
+# Attach a photo or audio clip to a memory
+memory-lane attach-media <MEMORY_ID> /path/to/wedding.jpg
+
 # Get an end-of-visit summary
 memory-lane visit-report <SESSION_ID>
 

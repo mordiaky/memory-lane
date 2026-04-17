@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from . import exporters, importers, service
+from . import media as media_module
 from .lmd_bridge import LMDBridge
 from .models import EmotionalTone, MemoryStatus, ReactionKind
 from .storage import get_engine, init_db, session_factory
@@ -342,6 +343,37 @@ def import_csv(patient_id: str, csv_path: str) -> None:
     )
     for w in report.warnings:
         console.print(f"  [yellow]warning:[/] {w}")
+
+
+@app.command("attach-media")
+def attach_media(memory_id: str, path: str) -> None:
+    """Attach a photo (jpg/png/webp/heic/gif) or audio (mp3/m4a/wav/ogg/flac)
+    to an existing memory. The file is copied into MemoryLane's media store
+    (default ~/.memory-lane/media/); the original is left untouched."""
+    from pathlib import Path as _Path
+
+    source = _Path(path)
+    if not source.exists():
+        console.print(f"[red]File not found: {source}[/]")
+        raise typer.Exit(code=1)
+
+    data = source.read_bytes()
+    with _session() as db:
+        try:
+            memory, kind, relative = service.attach_media_to_memory(
+                db, memory_id, source.name, data
+            )
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=1) from exc
+        except media_module.UnsupportedMediaType as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=1) from exc
+
+    console.print(
+        f"[green]Attached[/] {kind} to '{memory.title}' "
+        f"→ stored at {relative}"
+    )
 
 
 @app.command("export")
