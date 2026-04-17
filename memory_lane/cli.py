@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import typer
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 
-from . import service
+from . import importers, service
 from .lmd_bridge import LMDBridge
 from .models import EmotionalTone, MemoryStatus, ReactionKind
 from .storage import get_engine, init_db, session_factory
@@ -225,6 +226,122 @@ def fading(patient_id: str) -> None:
     for m in memories:
         table.add_row(m.id[:8], m.title, m.status.value, f"{m.energy:.2f}")
     console.print(table)
+
+
+@app.command("eras")
+def eras(patient_id: str) -> None:
+    """Show a status-at-a-glance overview grouped by life era."""
+    with _session() as db:
+        summaries = service.era_overview(db, patient_id)
+    if not summaries:
+        console.print("[yellow]No memories yet for this patient.[/]")
+        return
+    table = Table(title="Life eras")
+    table.add_column("era")
+    table.add_column("memories", justify="right")
+    table.add_column("vivid", justify="right")
+    table.add_column("at-risk", justify="right")
+    table.add_column("avg energy", justify="right")
+    table.add_column("tones", overflow="fold")
+    for s in summaries:
+        tones_str = ", ".join(f"{k}:{v}" for k, v in s.tone_breakdown.items())
+        table.add_row(
+            s.era,
+            str(s.memory_count),
+            str(s.vivid_count),
+            str(s.fading_count),
+            f"{s.average_energy:.2f}",
+            tones_str,
+        )
+    console.print(table)
+
+
+@app.command("visit-report")
+def visit_report(session_id: str) -> None:
+    """Print an end-of-visit report for a caregiver session."""
+    with _session() as db:
+        try:
+            report = service.build_visit_report(db, session_id)
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=1) from exc
+
+    tone_color = {
+        "warm": "green",
+        "steady": "cyan",
+        "muted": "yellow",
+        "mixed": "yellow",
+        "concerning": "red",
+        "no_data": "white",
+    }.get(report["overall_tone"], "white")
+
+    header = (
+        f"Session {report['session_id'][:8]} • "
+        f"patient {report['patient_id'][:8]} • "
+        f"caregiver {report['caregiver_name'] or 'unknown'}"
+    )
+    duration = (
+        f"{report['duration_minutes']} min"
+        if report["duration_minutes"] is not None
+        else "session still open"
+    )
+    console.print(
+        Panel(
+            f"[{tone_color}]Overall tone: {report['overall_tone']}[/]\n"
+            f"Reactions logged: {report['reactions_logged']} "
+            f"(positive {report['positive_count']}, neutral {report['neutral_count']}, "
+            f"distress {report['distress_count']}, not-recognized {report['not_recognized_count']}, "
+            f"skipped {report['skipped_count']})\n"
+            f"Memories surfaced: {report['memories_surfaced']}\n"
+            f"Duration: {duration}",
+            title=header,
+        )
+    )
+
+    if report["highlights"]:
+        hl_table = Table(title="Highlights (landed well)")
+        hl_table.add_column("title")
+        hl_table.add_column("notes", overflow="fold")
+        for h in report["highlights"]:
+            hl_table.add_row(h["title"], h["notes"] or "")
+        console.print(hl_table)
+
+    if report["concerns"]:
+        co_table = Table(title="Concerns")
+        co_table.add_column("title")
+        co_table.add_column("concern")
+        co_table.add_column("severity")
+        co_table.add_column("notes", overflow="fold")
+        for c in report["concerns"]:
+            co_table.add_row(c["title"], c["concern"], c["severity"], c["notes"] or "")
+        console.print(co_table)
+
+    console.print("\n[bold]Follow-up suggestions:[/]")
+    for s in report["follow_up_suggestions"]:
+        console.print(f"  • {s}")
+
+
+@app.command("import-csv")
+def import_csv(patient_id: str, csv_path: str) -> None:
+    """Bulk-import memories for a patient from a CSV file.
+
+    Expected columns: title, description, tone, approximate_year,
+    era_label, valence_start, valence_peak, valence_end, tags. Only
+    title and description are required.
+    """
+    with _session() as db:
+        try:
+            report = importers.import_csv(db, patient_id, csv_path)
+        except (FileNotFoundError, ValueError) as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=1) from exc
+
+    console.print(
+        f"[green]Imported[/] {report.imported}, "
+        f"[yellow]skipped[/] {report.skipped}"
+    )
+    for w in report.warnings:
+        console.print(f"  [yellow]warning:[/] {w}")
 
 
 if __name__ == "__main__":

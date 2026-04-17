@@ -16,6 +16,7 @@ from .lmd_bridge import AnchorSuggestion, VisitSuggestion
 from .models import MemoryStatus
 from .schemas import (
     AnchorSuggestionOut,
+    EraSummaryOut,
     FlagRequest,
     MemoryCreate,
     MemoryRead,
@@ -26,6 +27,7 @@ from .schemas import (
     SessionEnd,
     SessionRead,
     SessionStart,
+    VisitReportOut,
     VisitSuggestionOut,
 )
 from .storage import get_engine, init_db, iter_session, session_factory
@@ -223,3 +225,38 @@ def suggest_visit_plan(
 @app.get("/patients/{patient_id}/fading", response_model=List[MemoryRead])
 def list_fading(patient_id: str, db: Session = Depends(get_db)) -> List[MemoryRead]:
     return [MemoryRead.model_validate(m) for m in service.fading_memories(db, patient_id)]
+
+
+@app.get(
+    "/patients/{patient_id}/eras",
+    response_model=List[EraSummaryOut],
+)
+def era_overview(patient_id: str, db: Session = Depends(get_db)) -> List[EraSummaryOut]:
+    summaries = service.era_overview(db, patient_id)
+    return [EraSummaryOut(**s.to_dict()) for s in summaries]
+
+
+@app.get(
+    "/patients/{patient_id}/eras/{era}/memories",
+    response_model=List[MemoryRead],
+)
+def memories_in_era(
+    patient_id: str,
+    era: str,
+    db: Session = Depends(get_db),
+) -> List[MemoryRead]:
+    return [
+        MemoryRead.model_validate(m)
+        for m in service.memories_in_era(db, patient_id, era)
+    ]
+
+
+@app.get(
+    "/sessions/{session_id}/report",
+    response_model=VisitReportOut,
+)
+def visit_report(session_id: str, db: Session = Depends(get_db)) -> VisitReportOut:
+    try:
+        return VisitReportOut(**service.build_visit_report(db, session_id))
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc

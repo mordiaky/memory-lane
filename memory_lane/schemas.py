@@ -121,3 +121,33 @@ class VisitSuggestionOut(BaseModel):
 
 class FlagRequest(BaseModel):
     note: str | None = None
+
+
+class EraSummaryOut(BaseModel):
+    era: str
+    memory_count: int
+    status_breakdown: dict[str, int]
+    tone_breakdown: dict[str, int]
+    average_energy: float
+    fading_count: int
+    vivid_count: int
+
+
+class VisitReportOut(BaseModel):
+    session_id: str
+    patient_id: str
+    caregiver_name: str | None
+    started_at: datetime
+    ended_at: datetime | None
+    duration_minutes: float | None
+    reactions_logged: int
+    positive_count: int
+    neutral_count: int
+    distress_count: int
+    not_recognized_count: int
+    skipped_count: int
+    memories_surfaced: int
+    overall_tone: str
+    highlights: list[dict]
+    concerns: list[dict]
+    follow_up_suggestions: list[str]
