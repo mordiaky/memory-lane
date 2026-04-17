@@ -41,6 +41,8 @@ dependencies = [
     "uvicorn[standard]>=0.27",
     "typer>=0.12",
     "rich>=13.0",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -61,6 +63,13 @@ Issues = "https://github.com/mordiaky/memory-lane/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["memory_lane*"]
+
+[tool.setuptools.package-data]
+memory_lane = [
+    "templates/*.html",
+    "templates/fragments/*.html",
+    "static/*.css",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,312 @@
+/* MemoryLane — warm, calm, accessible styling.
+   Typography runs large by default since many caregivers prefer it.
+   Palette is muted and warm — this isn't a dashboard for analytics,
+   it's an interface for a family thinking about a loved one.
+*/
+
+:root {
+    --bg: #faf7f2;
+    --surface: #ffffff;
+    --surface-muted: #f3ece0;
+    --text: #2a2623;
+    --text-muted: #6b655d;
+    --border: #e5ddd0;
+    --accent: #5f7d57;          /* muted green */
+    --accent-hover: #4c6645;
+    --warn: #a06650;            /* muted terracotta */
+    --distress: #8a3b2e;
+    --fade: #b8a890;
+    --shadow: 0 1px 2px rgba(40, 30, 20, 0.04), 0 4px 12px rgba(40, 30, 20, 0.04);
+    --radius: 10px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+}
+
+header.topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+}
+
+header.topbar .brand {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+}
+
+header.topbar .disclaimer {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+}
+
+h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.9rem;
+    font-weight: 600;
+}
+
+h2 {
+    margin: 2rem 0 0.8rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    margin-top: 0;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.4rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+}
+
+.card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.1rem;
+}
+
+.card p {
+    margin: 0.25rem 0;
+    color: var(--text-muted);
+}
+
+.card-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.card-row > * {
+    flex: 1 1 260px;
+}
+
+.chip {
+    display: inline-block;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    margin-right: 0.35rem;
+}
+
+.chip.tone-joyful { background: #dfead4; color: #415a37; }
+.chip.tone-bittersweet { background: #efe0c9; color: #6b5434; }
+.chip.tone-difficult { background: #e8cfc5; color: #7f3a2a; }
+.chip.tone-neutral { background: #e6e1d8; color: #5a544c; }
+
+.chip.status-vivid { background: #d6e5ce; color: #2e4d26; }
+.chip.status-active { background: #e1edd8; color: #41623a; }
+.chip.status-dormant { background: #efe0c4; color: #6e5a2e; }
+.chip.status-fading { background: #eed1b8; color: #7d4e2e; }
+.chip.status-ghost { background: #dcd3c3; color: #5a4e3d; }
+
+.chip.flag { background: #e5c4b7; color: #7a2d1c; }
+
+a {
+    color: var(--accent);
+}
+
+.button, button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button:hover, button:hover {
+    background: var(--accent-hover);
+}
+
+.button.secondary {
+    background: var(--surface-muted);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.button.secondary:hover {
+    background: #eadfca;
+}
+
+.button.danger {
+    background: var(--distress);
+}
+
+.reaction-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+.reaction-buttons button {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+}
+
+form.inline {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-top: 1rem;
+}
+
+form.stacked label {
+    display: block;
+    margin-top: 0.75rem;
+    font-weight: 500;
+}
+
+form.stacked input[type="text"],
+form.stacked input[type="number"],
+form.stacked textarea,
+form.stacked select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--surface);
+}
+
+form.stacked textarea {
+    min-height: 5rem;
+}
+
+form .row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+form .row > * {
+    flex: 1;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 0.5rem 0 1.5rem;
+}
+
+.summary-grid .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+.summary-grid .stat .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.summary-grid .stat .value {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.era-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.era-block .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.era-block .meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.memory-photo {
+    max-width: 100%;
+    max-height: 360px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.tone-warm { color: #3c6033; }
+.tone-steady { color: #2e5462; }
+.tone-muted { color: #7d6b2e; }
+.tone-mixed { color: #7a5a33; }
+.tone-concerning { color: var(--distress); }
+.tone-no_data { color: var(--text-muted); }
+
+footer.legal {
+    max-width: 980px;
+    margin: 3rem auto 2rem;
+    padding: 0 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.flash {
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: #eee4d2;
+    border: 1px solid #d9c9aa;
+}
+
+.flash.error {
+    background: #eed0c5;
+    border-color: #d49c88;
+}
+
+.reactions-logged {
+    margin-top: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--accent);
+}
+
+.empty {
+    color: var(--text-muted);
+    font-style: italic;
+}

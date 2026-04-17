@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Visit with {{ patient.display_name }}{% endblock %}
+
+{% block content %}
+<p><a href="/patients/{{ patient.id }}">&larr; Back to {{ patient.display_name }}</a></p>
+<h1>Visit in progress</h1>
+<p class="subtitle">
+    Started {{ session.started_at.strftime('%b %d, %Y %H:%M') }}
+    {% if session.caregiver_name %}· {{ session.caregiver_name }}{% endif %}
+</p>
+
+<div class="card">
+    <h3>Suggested memories to surface</h3>
+    <p class="subtitle">Log a reaction as you share each one — the system will adjust which memories it recommends next time.</p>
+
+    {% for item in suggestions %}
+    {% with suggestion=item.suggestion, memory=item.memory %}
+    <div class="card" id="memory-card-{{ memory.id }}">
+        {% include "fragments/memory_card.html" %}
+    </div>
+    {% endwith %}
+    {% else %}
+    <p class="empty">No memories available to surface. <a href="/patients/{{ patient.id }}/memories/new">Add one first</a>.</p>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <form method="post" action="/sessions/{{ session.id }}/end" class="stacked">
+        <label>Summary (optional)
+            <textarea name="summary" placeholder="A brief note about how the visit went."></textarea>
+        </label>
+        <div style="margin-top:0.5rem;">
+            <button type="submit">End visit & view report</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

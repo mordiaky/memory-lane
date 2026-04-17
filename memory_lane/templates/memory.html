@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ memory.title }} — MemoryLane{% endblock %}
+
+{% block content %}
+<p><a href="/patients/{{ memory.patient_id }}">&larr; Back to {{ patient.display_name }}</a></p>
+<h1>{{ memory.title }}</h1>
+<p class="subtitle">
+    <span class="chip tone-{{ memory.tone.value }}">{{ memory.tone.value }}</span>
+    <span class="chip status-{{ memory.status.value }}">{{ memory.status.value }}</span>
+    {% if memory.flagged_distressing %}<span class="chip flag">flagged as distressing</span>{% endif %}
+    {% if memory.approximate_year %}<span class="chip">{{ memory.approximate_year }}</span>{% endif %}
+    {% if memory.era_label %}<span class="chip">{{ memory.era_label }}</span>{% endif %}
+</p>
+
+{% if memory.photo_path %}
+<div class="card">
+    <img class="memory-photo" src="/memories/{{ memory.id }}/media" alt="{{ memory.title }}">
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Description</h3>
+    <p>{{ memory.description }}</p>
+    {% if memory.distress_note %}
+    <p><strong>Caregiver note:</strong> {{ memory.distress_note }}</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Emotional arc</h3>
+    <p class="subtitle">How the memory felt — from its start through its peak to its resolution.</p>
+    <p>start: {{ "%.2f"|format(memory.valence_start) }} · peak: {{ "%.2f"|format(memory.valence_peak) }} · end: {{ "%.2f"|format(memory.valence_end) }}</p>
+    <p class="subtitle">Energy: {{ "%.2f"|format(memory.energy) }}</p>
+</div>
+
+<div class="card">
+    <h3>Attach a photo or audio clip</h3>
+    <form method="post" action="/memories/{{ memory.id }}/media" enctype="multipart/form-data" class="inline">
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+    <p class="subtitle">Images: jpg, png, webp, heic, gif · Audio: mp3, m4a, wav, ogg, flac</p>
+</div>
+
+<div class="card">
+    <h3>Safety</h3>
+    {% if memory.flagged_distressing %}
+        <p>This memory is currently <strong>flagged as distressing</strong> and will be skipped when MemoryLane suggests anchor memories or visit plans.</p>
+        <form method="post" action="/memories/{{ memory.id }}/unflag">
+            <button type="submit" class="button secondary">Unflag memory</button>
+        </form>
+    {% else %}
+        <form method="post" action="/memories/{{ memory.id }}/flag" class="stacked">
+            <label>Reason (optional)
+                <input type="text" name="note" placeholder="e.g., causes agitation around holidays">
+            </label>
+            <div style="margin-top:0.5rem;">
+                <button type="submit" class="button danger">Flag as distressing</button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

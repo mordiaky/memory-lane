@@ -109,13 +109,27 @@ Only `title` and `description` are required. `tone` is one of
 `joyful`, `bittersweet`, `difficult`, `neutral`. Unknown tones
 default to `neutral` with a warning.
 
-## Run the HTTP API
+## Run the web app
 
 ```bash
 uvicorn memory_lane.api:app --reload
 ```
 
-Then explore the interactive docs at http://127.0.0.1:8000/docs.
+Then open:
+
+- **http://127.0.0.1:8000/** — the caregiver web UI (patient list, life-story archive, visit sessions, reports).
+- **http://127.0.0.1:8000/docs** — interactive JSON API docs.
+- **http://127.0.0.1:8000/api/…** — the JSON API itself.
+
+The web UI and JSON API share the same service layer, so anything you can do through the API you can also do through the browser (and vice versa).
+
+### The visit flow, in the UI
+
+1. From the patient dashboard, click **Start visit** (optionally naming the caregiver).
+2. The session page shows suggested memories, ordered by how much they need reinforcement.
+3. For each one, click a reaction button: **Recognized · positive** / **Neutral** / **Caused distress** / **Did not recognize**. The card updates in place (no page reload) and the memory's status is recalculated.
+4. When you're done, fill in an optional summary and click **End visit & view report**.
+5. The report page shows highlights, concerns, and follow-up suggestions for next time.
 
 ## Data model
 

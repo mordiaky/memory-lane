@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.display_name }} — MemoryLane{% endblock %}
+
+{% block content %}
+<p><a href="/">&larr; All patients</a></p>
+<h1>{{ patient.display_name }}</h1>
+<p class="subtitle">
+    {% if patient.birth_year %}b. {{ patient.birth_year }} · {% endif %}
+    {{ memories|length }} memor{{ 'y' if memories|length == 1 else 'ies' }}
+</p>
+
+<div class="summary-grid">
+    <div class="stat">
+        <div class="label">Vivid</div>
+        <div class="value">{{ status_counts.get('vivid', 0) }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Active</div>
+        <div class="value">{{ status_counts.get('active', 0) }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Dormant</div>
+        <div class="value">{{ status_counts.get('dormant', 0) }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Fading</div>
+        <div class="value">{{ status_counts.get('fading', 0) }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Ghost</div>
+        <div class="value">{{ status_counts.get('ghost', 0) }}</div>
+    </div>
+</div>
+
+<h2>Sessions</h2>
+<div class="card">
+    <form method="post" action="/patients/{{ patient.id }}/sessions" class="inline">
+        <label>Start a visit with
+            <input type="text" name="caregiver_name" placeholder="Caregiver name (optional)">
+        </label>
+        <button type="submit">Start visit</button>
+    </form>
+    {% if recent_sessions %}
+    <h3 style="margin-top:1rem;">Recent visits</h3>
+    <ul>
+    {% for s in recent_sessions %}
+        <li>
+            <a href="/sessions/{{ s.id }}/report">{{ s.started_at.strftime('%b %d, %Y %H:%M') }}</a>
+            — {{ s.caregiver_name or 'unknown caregiver' }}
+            {% if s.ended_at %}(ended){% else %}(in progress){% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+
+{% if eras %}
+<h2>Life eras</h2>
+{% for era in eras %}
+<div class="era-block">
+    <div class="header">
+        <strong>{{ era.era }}</strong>
+        <span class="meta">{{ era.memory_count }} memories · avg energy {{ "%.2f"|format(era.average_energy) }}</span>
+    </div>
+    <div class="meta">
+        Vivid: {{ era.vivid_count }} · At risk: {{ era.fading_count }}
+        &middot;
+        {% for tone, n in era.tone_breakdown.items() %}
+            <span class="chip tone-{{ tone }}">{{ tone }} {{ n }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<h2>Memories</h2>
+<p><a href="/patients/{{ patient.id }}/memories/new" class="button secondary">+ Add a memory</a></p>
+
+{% if memories %}
+    {% for m in memories %}
+    <div class="card">
+        <h3><a href="/memories/{{ m.id }}">{{ m.title }}</a></h3>
+        <p>
+            <span class="chip tone-{{ m.tone.value }}">{{ m.tone.value }}</span>
+            <span class="chip status-{{ m.status.value }}">{{ m.status.value }}</span>
+            {% if m.flagged_distressing %}<span class="chip flag">flagged</span>{% endif %}
+            {% if m.approximate_year %}<span class="chip">{{ m.approximate_year }}</span>{% endif %}
+        </p>
+        <p>{{ m.description }}</p>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="empty">No memories yet for {{ patient.display_name }}.</p>
+{% endif %}
+
+<h2>Actions</h2>
+<div class="card">
+    <p>
+        <a href="/patients/{{ patient.id }}/export/json" class="button secondary">Export as JSON</a>
+        <a href="/patients/{{ patient.id }}/export/csv" class="button secondary">Export memories as CSV</a>
+    </p>
+</div>
+{% endblock %}

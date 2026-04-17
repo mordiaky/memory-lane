@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Visit report — {{ patient.display_name }}{% endblock %}
+
+{% block content %}
+<p><a href="/patients/{{ patient.id }}">&larr; Back to {{ patient.display_name }}</a></p>
+<h1>Visit report</h1>
+<p class="subtitle">
+    {{ report.started_at.strftime('%b %d, %Y %H:%M') }}
+    {% if report.caregiver_name %}· {{ report.caregiver_name }}{% endif %}
+    {% if report.duration_minutes is not none %}· {{ report.duration_minutes }} min{% endif %}
+</p>
+
+<div class="card">
+    <h3>Overall tone: <span class="tone-{{ report.overall_tone }}">{{ report.overall_tone.replace('_', ' ') }}</span></h3>
+    <p class="subtitle">This is a rough characterization based on the reactions logged, not a clinical assessment.</p>
+</div>
+
+<div class="summary-grid">
+    <div class="stat">
+        <div class="label">Positive</div>
+        <div class="value">{{ report.positive_count }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Neutral</div>
+        <div class="value">{{ report.neutral_count }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Distress</div>
+        <div class="value">{{ report.distress_count }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Not recognized</div>
+        <div class="value">{{ report.not_recognized_count }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Skipped</div>
+        <div class="value">{{ report.skipped_count }}</div>
+    </div>
+    <div class="stat">
+        <div class="label">Memories surfaced</div>
+        <div class="value">{{ report.memories_surfaced }}</div>
+    </div>
+</div>
+
+{% if report.highlights %}
+<h2>Highlights — these landed</h2>
+{% for h in report.highlights %}
+<div class="card">
+    <h3>{{ h.title }}</h3>
+    {% if h.notes %}<p>{{ h.notes }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if report.concerns %}
+<h2>Concerns</h2>
+{% for c in report.concerns %}
+<div class="card">
+    <h3>{{ c.title }}</h3>
+    <p><span class="chip flag">{{ c.concern.replace('_', ' ') }}</span></p>
+    {% if c.notes %}<p>{{ c.notes }}</p>{% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<h2>Follow-up suggestions</h2>
+<ul>
+    {% for s in report.follow_up_suggestions %}
+    <li>{{ s }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

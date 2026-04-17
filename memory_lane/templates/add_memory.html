@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Add a memory for {{ patient.display_name }}{% endblock %}
+
+{% block content %}
+<p><a href="/patients/{{ patient.id }}">&larr; Back to {{ patient.display_name }}</a></p>
+<h1>Add a memory</h1>
+<p class="subtitle">Life stories are built one piece at a time.</p>
+
+<form method="post" action="/patients/{{ patient.id }}/memories" class="stacked">
+    <div class="card">
+        <label>Title
+            <input type="text" name="title" required autofocus placeholder="e.g., Wedding day">
+        </label>
+        <label>Description
+            <textarea name="description" required placeholder="A specific, vivid description — what happened, who was there, what stood out."></textarea>
+        </label>
+    </div>
+
+    <div class="card">
+        <h3>Time and tone</h3>
+        <div class="row">
+            <label>Approximate year
+                <input type="number" name="approximate_year" min="1900" max="2100">
+            </label>
+            <label>Era label (optional)
+                <input type="text" name="era_label" placeholder="e.g., 1960s, Italy trips">
+            </label>
+        </div>
+        <label>Emotional tone
+            <select name="tone">
+                <option value="joyful">Joyful — safe to revisit</option>
+                <option value="bittersweet">Bittersweet</option>
+                <option value="neutral" selected>Neutral</option>
+                <option value="difficult">Difficult — handle with care</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="card">
+        <h3>Emotional arc</h3>
+        <p class="subtitle">How did the memory FEEL from start to end? Values between -1 (very hard) and +1 (very joyful).</p>
+        <div class="row">
+            <label>Start (onset)
+                <input type="number" name="valence_start" value="0.0" min="-1" max="1" step="0.05">
+            </label>
+            <label>Peak
+                <input type="number" name="valence_peak" value="0.5" min="-1" max="1" step="0.05">
+            </label>
+            <label>End (resolution)
+                <input type="number" name="valence_end" value="0.3" min="-1" max="1" step="0.05">
+            </label>
+        </div>
+    </div>
+
+    <button type="submit">Add memory</button>
+</form>
+{% endblock %}

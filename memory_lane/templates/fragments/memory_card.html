@@ -1,0 +1,48 @@
+{# Partial rendered both on page load and by HTMX after a reaction.
+   Expects `suggestion`, `memory`, `session`, `logged_reaction` (optional). #}
+<h4 style="margin:0;">
+    <a href="/memories/{{ memory.id }}">{{ memory.title }}</a>
+</h4>
+<p>
+    <span class="chip tone-{{ memory.tone.value }}">{{ memory.tone.value }}</span>
+    <span class="chip status-{{ memory.status.value }}">{{ memory.status.value }}</span>
+    {% if memory.approximate_year %}<span class="chip">{{ memory.approximate_year }}</span>{% endif %}
+</p>
+<p class="subtitle">{{ memory.description[:200] }}{% if memory.description|length > 200 %}…{% endif %}</p>
+
+{% if logged_reaction %}
+    <div class="reactions-logged">
+        ✓ Logged: {{ logged_reaction.replace('_', ' ') }}
+    </div>
+{% endif %}
+
+<div class="reaction-buttons">
+    <button class="button"
+            hx-post="/sessions/{{ session.id }}/reactions"
+            hx-target="#memory-card-{{ memory.id }}"
+            hx-swap="innerHTML"
+            hx-vals='{"memory_id": "{{ memory.id }}", "kind": "recognized_positive"}'>
+        Recognized · positive
+    </button>
+    <button class="button secondary"
+            hx-post="/sessions/{{ session.id }}/reactions"
+            hx-target="#memory-card-{{ memory.id }}"
+            hx-swap="innerHTML"
+            hx-vals='{"memory_id": "{{ memory.id }}", "kind": "recognized_neutral"}'>
+        Neutral reaction
+    </button>
+    <button class="button danger"
+            hx-post="/sessions/{{ session.id }}/reactions"
+            hx-target="#memory-card-{{ memory.id }}"
+            hx-swap="innerHTML"
+            hx-vals='{"memory_id": "{{ memory.id }}", "kind": "recognized_distress"}'>
+        Caused distress
+    </button>
+    <button class="button secondary"
+            hx-post="/sessions/{{ session.id }}/reactions"
+            hx-target="#memory-card-{{ memory.id }}"
+            hx-swap="innerHTML"
+            hx-vals='{"memory_id": "{{ memory.id }}", "kind": "not_recognized"}'>
+        Did not recognize
+    </button>
+</div>

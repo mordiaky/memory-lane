@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}MemoryLane — patients{% endblock %}
+
+{% block content %}
+<h1>Patients</h1>
+<p class="subtitle">Each loved one you support gets their own life-story archive.</p>
+
+{% if patients %}
+    {% for p in patients %}
+    <div class="card">
+        <h3><a href="/patients/{{ p.id }}">{{ p.display_name }}</a></h3>
+        <p>
+            {% if p.birth_year %}b. {{ p.birth_year }}{% endif %}
+            {% if p.notes %}<br><span class="subtitle">{{ p.notes }}</span>{% endif %}
+        </p>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="empty">No patients yet. Add one below to start building a life-story archive.</p>
+{% endif %}
+
+<div class="card">
+    <h3>Add a patient</h3>
+    <form method="post" action="/patients" class="stacked">
+        <label>Name
+            <input type="text" name="display_name" required autofocus>
+        </label>
+        <div class="row">
+            <label>Birth year (optional)
+                <input type="number" name="birth_year" min="1900" max="2100">
+            </label>
+        </div>
+        <label>Notes (optional)
+            <textarea name="notes" placeholder="Any context a family member should know — e.g., preferred name, family nicknames, things to avoid."></textarea>
+        </label>
+        <div style="margin-top:1rem;">
+            <button type="submit">Add patient</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

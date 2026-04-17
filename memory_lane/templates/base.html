@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}MemoryLane{% endblock %}</title>
+    <link rel="stylesheet" href="/static/app.css">
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <a href="/" class="brand">MemoryLane</a>
+        <div class="disclaimer">
+            A wellness tool for families. Not a medical device. Not a substitute for professional medical advice.
+        </div>
+    </header>
+
+    <main>
+        {% if flash %}
+            <div class="flash {% if flash_kind == 'error' %}error{% endif %}">{{ flash }}</div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="legal">
+        MemoryLane is a wellness and organization tool. It does not diagnose, treat, cure, or prevent
+        any medical condition, including Alzheimer's disease or any other form of dementia. It is not
+        a substitute for professional medical advice, diagnosis, or therapy. Always consult a qualified
+        clinician for medical decisions about a loved one's care.
+    </footer>
+</body>
+</html>
