@@ -9,9 +9,10 @@ from __future__ import annotations
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 
-from . import service
+from . import exporters, service
 from .lmd_bridge import AnchorSuggestion, VisitSuggestion
 from .models import MemoryStatus
 from .schemas import (
@@ -258,5 +259,26 @@ def memories_in_era(
 def visit_report(session_id: str, db: Session = Depends(get_db)) -> VisitReportOut:
     try:
         return VisitReportOut(**service.build_visit_report(db, session_id))
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+
+@app.get("/patients/{patient_id}/export/json")
+def export_json(patient_id: str, db: Session = Depends(get_db)) -> dict:
+    """Full patient archive as JSON (patient + memories + sessions + reactions)."""
+    try:
+        return exporters.export_patient_json(db, patient_id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+
+@app.get(
+    "/patients/{patient_id}/export/csv",
+    response_class=PlainTextResponse,
+)
+def export_csv(patient_id: str, db: Session = Depends(get_db)) -> str:
+    """Patient's memories as CSV — round-trips through the CSV importer."""
+    try:
+        return exporters.export_memories_csv_string(db, patient_id)
     except ValueError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc

@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from . import importers, service
+from . import exporters, importers, service
 from .lmd_bridge import LMDBridge
 from .models import EmotionalTone, MemoryStatus, ReactionKind
 from .storage import get_engine, init_db, session_factory
@@ -342,6 +342,47 @@ def import_csv(patient_id: str, csv_path: str) -> None:
     )
     for w in report.warnings:
         console.print(f"  [yellow]warning:[/] {w}")
+
+
+@app.command("export")
+def export(
+    patient_id: str,
+    format: str = typer.Option(
+        "json",
+        help="Output format: 'json' (full archive) or 'csv' (memories only).",
+    ),
+    output: str | None = typer.Option(
+        None,
+        help="File to write to. Prints to stdout if omitted.",
+    ),
+) -> None:
+    """Export a patient's data in a portable format.
+
+    The JSON export is the complete archive — patient, memories,
+    sessions, and reactions. The CSV export is memories-only and
+    round-trips through `memory-lane import-csv`.
+    """
+    with _session() as db:
+        try:
+            if format == "json":
+                payload = exporters.export_patient_json_string(db, patient_id)
+            elif format == "csv":
+                payload = exporters.export_memories_csv_string(db, patient_id)
+            else:
+                console.print(f"[red]Unknown format: {format}[/]")
+                raise typer.Exit(code=1)
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=1) from exc
+
+    if output is None:
+        # Rich's console can wrap or highlight; use plain print so the
+        # output is redirectable without escape codes.
+        print(payload)
+    else:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(payload)
+        console.print(f"[green]Wrote[/] {output}")
 
 
 if __name__ == "__main__":

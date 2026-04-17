@@ -78,7 +78,33 @@ memory-lane visit-plan <PATIENT_ID>
 
 # See which memories are at risk
 memory-lane fading <PATIENT_ID>
+
+# Get an end-of-visit summary
+memory-lane visit-report <SESSION_ID>
+
+# Browse memories grouped by life era
+memory-lane eras <PATIENT_ID>
+
+# Bulk-import existing memories from a spreadsheet
+memory-lane import-csv <PATIENT_ID> family-memories.csv
+
+# Export the full archive (family keeps control of their data)
+memory-lane export <PATIENT_ID> --format json --output archive.json
+memory-lane export <PATIENT_ID> --format csv --output memories.csv
 ```
+
+### CSV format for import and export
+
+Both `import-csv` and `export --format csv` use the same column set:
+
+```
+title, description, tone, approximate_year, era_label,
+valence_start, valence_peak, valence_end, tags
+```
+
+Only `title` and `description` are required. `tone` is one of
+`joyful`, `bittersweet`, `difficult`, `neutral`. Unknown tones
+default to `neutral` with a warning.
 
 ## Run the HTTP API
 
