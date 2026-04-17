@@ -133,6 +133,43 @@ class EraSummaryOut(BaseModel):
     vivid_count: int
 
 
+class ConversationSparkOut(BaseModel):
+    suggested_angle: str
+    source_memory_ids: list[str]
+    source_memory_titles: list[str]
+    leap_type: str
+    novelty: float
+
+
+class LifeStoryChapterOut(BaseModel):
+    era: str
+    heading: str
+    paragraphs: list[str]
+    memory_ids: list[str]
+
+
+class LifeStoryOut(BaseModel):
+    patient_id: str
+    patient_name: str
+    opening: str
+    chapters: list[LifeStoryChapterOut]
+    closing: str
+    word_count: int
+    memory_count: int
+
+
+class DynamicsTickOut(BaseModel):
+    patient_id: str
+    memories_stepped: int
+    memories_unchanged: int
+    total_energy_before: float
+    total_energy_after: float
+    newly_vivid: int
+    newly_faded: int
+    used_lmd: bool
+    reason: str | None = None
+
+
 class VisitReportOut(BaseModel):
     session_id: str
     patient_id: str

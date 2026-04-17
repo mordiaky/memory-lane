@@ -14,13 +14,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from . import dynamics as dynamics_module
+from . import life_story, service, sparks
 from . import media as media_module
-from . import service
 from .models import EmotionalTone, Memory, Patient, ReactionKind
 from .models import Session as VisitSession
 
@@ -337,4 +338,74 @@ def web_report(
     return templates.TemplateResponse(
         "report.html",
         {"request": request, "report": report, "patient": patient},
+    )
+
+
+# ---- Conversation sparks (HTMX fragment) ----------------------
+
+
+@router.get("/sessions/{session_id}/sparks", response_class=HTMLResponse)
+def web_session_sparks(
+    session_id: str,
+    request: Request,
+    db: Session = Depends(_get_db),
+) -> HTMLResponse:
+    """HTMX target — returns a spark list fragment to drop into the session page."""
+    visit = db.get(VisitSession, session_id)
+    if visit is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")
+    spark_list = sparks.generate_sparks(db, visit.patient_id, n=3)
+    return templates.TemplateResponse(
+        "fragments/sparks.html",
+        {"request": request, "sparks": spark_list},
+    )
+
+
+# ---- Life story -----------------------------------------------
+
+
+@router.get("/patients/{patient_id}/story", response_class=HTMLResponse)
+def web_life_story(
+    patient_id: str,
+    request: Request,
+    db: Session = Depends(_get_db),
+) -> HTMLResponse:
+    try:
+        story = life_story.generate_life_story(db, patient_id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+    return templates.TemplateResponse(
+        "story.html",
+        {"request": request, "story": story},
+    )
+
+
+@router.get(
+    "/patients/{patient_id}/story.md",
+    response_class=PlainTextResponse,
+)
+def web_life_story_markdown(
+    patient_id: str,
+    db: Session = Depends(_get_db),
+) -> str:
+    """Downloadable markdown version of the life story."""
+    try:
+        story = life_story.generate_life_story(db, patient_id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+    return story.to_markdown()
+
+
+# ---- Dynamics tick (form POST) --------------------------------
+
+
+@router.post("/patients/{patient_id}/dynamics/tick")
+def web_dynamics_tick(
+    patient_id: str,
+    db: Session = Depends(_get_db),
+) -> RedirectResponse:
+    dynamics_module.tick(db, patient_id)
+    return RedirectResponse(
+        f"/patients/{patient_id}",
+        status_code=status.HTTP_303_SEE_OTHER,
     )

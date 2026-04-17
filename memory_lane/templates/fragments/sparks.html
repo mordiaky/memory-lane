@@ -1,0 +1,16 @@
+{# Fragment rendered into the session page when the caregiver asks for a spark.
+   Expects `sparks` (list of ConversationSpark). #}
+{% if sparks %}
+    {% for s in sparks %}
+    <div class="card" style="border-left: 4px solid var(--accent);">
+        <p style="font-size:1.05rem;">{{ s.suggested_angle }}</p>
+        <p class="subtitle">
+            Sources: {{ s.source_memory_titles | join(' · ') }}
+            &middot; novelty {{ "%.2f"|format(s.novelty) }}
+            &middot; <code>{{ s.leap_type }}</code>
+        </p>
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="empty">Need at least two safe memories to spark a connection.</p>
+{% endif %}

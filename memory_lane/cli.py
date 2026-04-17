@@ -11,7 +11,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from . import exporters, importers, service
+from . import dynamics as dynamics_module
+from . import exporters, importers, life_story, service, sparks
 from . import media as media_module
 from .lmd_bridge import LMDBridge
 from .models import EmotionalTone, MemoryStatus, ReactionKind
@@ -415,6 +416,82 @@ def export(
         with open(output, "w", encoding="utf-8") as f:
             f.write(payload)
         console.print(f"[green]Wrote[/] {output}")
+
+
+@app.command("sparks")
+def sparks_cmd(patient_id: str, n: int = 3) -> None:
+    """Generate caregiver conversation sparks via LMD creative leaps."""
+    with _session() as db:
+        results = sparks.generate_sparks(db, patient_id, n=n)
+    if not results:
+        console.print("[yellow]Not enough safe memories yet — add at least two.[/]")
+        return
+    table = Table(title="Conversation sparks")
+    table.add_column("angle", overflow="fold")
+    table.add_column("sources", overflow="fold")
+    table.add_column("leap")
+    table.add_column("novelty", justify="right")
+    for s in results:
+        table.add_row(
+            s.suggested_angle,
+            " · ".join(s.source_memory_titles),
+            s.leap_type,
+            f"{s.novelty:.2f}",
+        )
+    console.print(table)
+
+
+@app.command("story")
+def story_cmd(
+    patient_id: str,
+    output: str | None = typer.Option(None, help="File to write to; prints if omitted."),
+    format: str = typer.Option("markdown", help="'markdown' or 'text'."),
+) -> None:
+    """Generate the patient's auto-generated life story."""
+    with _session() as db:
+        try:
+            story = life_story.generate_life_story(db, patient_id)
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/]")
+            raise typer.Exit(code=1) from exc
+
+    if format == "text":
+        payload = story.to_text()
+    else:
+        payload = story.to_markdown()
+
+    if output is None:
+        print(payload)
+    else:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(payload)
+        console.print(
+            f"[green]Wrote[/] {output} — {story.word_count} words across "
+            f"{len(story.chapters)} chapter(s)."
+        )
+
+
+@app.command("tick")
+def tick_cmd(patient_id: str, dt: float = 1.0) -> None:
+    """Run one LMD dynamics step — coupled memories sustain each other.
+
+    Call this periodically (e.g., once a day) to let the simulated
+    coupling influence each memory's energy. Distress-flagged and
+    DIFFICULT-toned memories are never stepped.
+    """
+    with _session() as db:
+        result = dynamics_module.tick(db, patient_id, dt=dt)
+    console.print(
+        f"Stepped {result.memories_stepped} memor{'y' if result.memories_stepped == 1 else 'ies'}."
+    )
+    console.print(
+        f"Total energy: {result.total_energy_before:.2f} → "
+        f"{result.total_energy_after:.2f}. "
+        f"Newly vivid: {result.newly_vivid}. "
+        f"Newly faded: {result.newly_faded}."
+    )
+    if result.reason:
+        console.print(f"[yellow]Note:[/] {result.reason}")
 
 
 if __name__ == "__main__":

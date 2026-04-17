@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ story.patient_name }}'s life story — MemoryLane{% endblock %}
+
+{% block content %}
+<p><a href="/patients/{{ story.patient_id }}">&larr; Back to {{ story.patient_name }}</a></p>
+<h1>The life story of {{ story.patient_name }}</h1>
+<p class="subtitle">
+    {{ story.word_count }} words · {{ story.memory_count }} memories
+    · <a href="/patients/{{ story.patient_id }}/story.md">download as markdown</a>
+</p>
+
+<div class="card">
+    <p>{{ story.opening }}</p>
+</div>
+
+{% for ch in story.chapters %}
+<h2>{{ ch.heading }}</h2>
+<div class="card">
+    {% for paragraph in ch.paragraphs %}
+    <p>{{ paragraph }}</p>
+    {% endfor %}
+</div>
+{% endfor %}
+
+{% if story.closing %}
+<div class="card">
+    <p><em>{{ story.closing }}</em></p>
+</div>
+{% endif %}
+{% endblock %}

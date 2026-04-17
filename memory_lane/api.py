@@ -31,13 +31,17 @@ from fastapi import (
 from fastapi.responses import FileResponse, PlainTextResponse
 from sqlalchemy.orm import Session
 
-from . import exporters, media, service
+from . import dynamics, exporters, life_story, media, service, sparks
 from .lmd_bridge import AnchorSuggestion, VisitSuggestion
 from .models import Memory, MemoryStatus
 from .schemas import (
     AnchorSuggestionOut,
+    ConversationSparkOut,
+    DynamicsTickOut,
     EraSummaryOut,
     FlagRequest,
+    LifeStoryChapterOut,
+    LifeStoryOut,
     MemoryCreate,
     MemoryRead,
     PatientCreate,
@@ -411,6 +415,70 @@ def serve_media(memory_id: str, db: Session = Depends(get_db)) -> FileResponse:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
 
     return FileResponse(path)
+
+
+@api_router.get(
+    "/patients/{patient_id}/sparks",
+    response_model=List[ConversationSparkOut],
+)
+def conversation_sparks(
+    patient_id: str,
+    n: int = 3,
+    db: Session = Depends(get_db),
+) -> List[ConversationSparkOut]:
+    """Generate `n` caregiver conversation sparks via LMD creative leaps."""
+    results = sparks.generate_sparks(db, patient_id, n=n)
+    return [ConversationSparkOut(**vars(s)) for s in results]
+
+
+@api_router.get(
+    "/patients/{patient_id}/story",
+    response_model=LifeStoryOut,
+)
+def patient_life_story(
+    patient_id: str,
+    db: Session = Depends(get_db),
+) -> LifeStoryOut:
+    """Return the patient's auto-generated life story."""
+    try:
+        story = life_story.generate_life_story(db, patient_id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+    return LifeStoryOut(
+        patient_id=story.patient_id,
+        patient_name=story.patient_name,
+        opening=story.opening,
+        chapters=[
+            LifeStoryChapterOut(
+                era=ch.era,
+                heading=ch.heading,
+                paragraphs=ch.paragraphs,
+                memory_ids=ch.memory_ids,
+            )
+            for ch in story.chapters
+        ],
+        closing=story.closing,
+        word_count=story.word_count,
+        memory_count=story.memory_count,
+    )
+
+
+@api_router.post(
+    "/patients/{patient_id}/dynamics/tick",
+    response_model=DynamicsTickOut,
+)
+def dynamics_tick(
+    patient_id: str,
+    dt: float = 1.0,
+    db: Session = Depends(get_db),
+) -> DynamicsTickOut:
+    """Advance LMD dynamics one step over the patient's archive.
+
+    Coupled memories sustain each other; isolated memories fade faster.
+    Writes the updated energies back to the database.
+    """
+    result = dynamics.tick(db, patient_id, dt=dt)
+    return DynamicsTickOut(**vars(result))
 
 
 app.include_router(api_router)

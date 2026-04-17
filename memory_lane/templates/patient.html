@@ -96,8 +96,19 @@
 <h2>Actions</h2>
 <div class="card">
     <p>
+        <a href="/patients/{{ patient.id }}/story" class="button">Read their life story</a>
+    </p>
+    <p class="subtitle">A prose narrative auto-generated from the memories in this archive.</p>
+</div>
+
+<div class="card">
+    <p>
         <a href="/patients/{{ patient.id }}/export/json" class="button secondary">Export as JSON</a>
         <a href="/patients/{{ patient.id }}/export/csv" class="button secondary">Export memories as CSV</a>
     </p>
+    <form method="post" action="/patients/{{ patient.id }}/dynamics/tick" style="margin-top:0.75rem;">
+        <button type="submit" class="button secondary">Run a dynamics tick</button>
+    </form>
+    <p class="subtitle">Advances the LMD simulation one step — coupled memories sustain each other, isolated ones fade.</p>
 </div>
 {% endblock %}

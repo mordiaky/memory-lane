@@ -10,6 +10,18 @@
 </p>
 
 <div class="card">
+    <h3>Conversation sparks</h3>
+    <p class="subtitle">If the visit stalls, click below for a novel angle combining the patient's own memories.</p>
+    <button class="button"
+            hx-get="/sessions/{{ session.id }}/sparks"
+            hx-target="#spark-box"
+            hx-swap="innerHTML">
+        Give me a spark
+    </button>
+    <div id="spark-box" style="margin-top:1rem;"></div>
+</div>
+
+<div class="card">
     <h3>Suggested memories to surface</h3>
     <p class="subtitle">Log a reaction as you share each one — the system will adjust which memories it recommends next time.</p>
 
